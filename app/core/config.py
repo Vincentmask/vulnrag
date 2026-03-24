@@ -15,6 +15,6 @@ def get_settings() -> Settings:
         app_name=os.getenv("APP_NAME", "VulnRAG API"),
         database_url=os.getenv(
             "DATABASE_URL",
-            "postgresql+psycopg2://postgres:postgres@localhost:5432/vulnrag",
+            "postgresql+psycopg2://postgres:postgres@localhost:5433/vulnrag",
         ),
     )

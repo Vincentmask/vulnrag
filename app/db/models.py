@@ -44,7 +44,7 @@ class Advisory(Base):
         String(128), nullable=False)
     summary: Mapped[str | None] = mapped_column(String(500), nullable=True)
     details: Mapped[str | None] = mapped_column(Text, nullable=True)
-    severity: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    severity: Mapped[str | None] = mapped_column(Text, nullable=True)
     published_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True)
     modified_at: Mapped[datetime | None] = mapped_column(
