@@ -1,13 +1,14 @@
-from app.db.session import engine
-from app.db.base import Base
-import sys
-from pathlib import Path
+from __future__ import annotations
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
-
-from app.db import models  # noqa: F401
+try:
+    from app.db.base import Base
+    from app.db.session import engine
+    from app.db import models  # noqa: F401
+except ModuleNotFoundError as exc:
+    raise SystemExit(
+        "Unable to import project modules. Run this script as a module from repo root:\n"
+        "  python -m scripts.init_db"
+    ) from exc
 
 
 def main() -> None:

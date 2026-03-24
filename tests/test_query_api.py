@@ -10,7 +10,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.db.base import Base
 from app.db.models import Advisory, AdvisoryAlias, Package, VersionRange
-from app.main import app, get_db
+from app.main import MAX_QUERY_MATCHES, app, get_db
 
 
 class TestQueryApi(unittest.TestCase):
@@ -121,6 +121,45 @@ class TestQueryApi(unittest.TestCase):
         summary = payload["matches"][0]["summary"]
         self.assertIsNotNone(summary)
         self.assertIn("requests advisory", summary)
+
+    def test_query_unknown_package_returns_empty(self) -> None:
+        response = self.client.post(
+            "/query",
+            json={"query": "check package-that-does-not-exist 1.0.0"},
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIsNone(payload["resolved_package"])
+        self.assertEqual(payload["matches"], [])
+
+    def test_query_result_count_is_limited(self) -> None:
+        with self.SessionLocal() as session:
+            package = session.scalar(
+                session.query(Package).filter(
+                    Package.normalized_name == "requests").statement
+            )
+            assert package is not None
+
+            for index in range(MAX_QUERY_MATCHES + 25):
+                advisory = Advisory(
+                    package_id=package.id,
+                    source="osv",
+                    source_advisory_id=f"OSV-LIMIT-{index}",
+                    summary=f"Limit advisory {index}",
+                    severity="high",
+                    modified_at=datetime.now(timezone.utc),
+                )
+                session.add(advisory)
+
+            session.commit()
+
+        response = self.client.post(
+            "/query",
+            json={"query": "check requests"},
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(len(payload["matches"]), MAX_QUERY_MATCHES)
 
 
 if __name__ == "__main__":

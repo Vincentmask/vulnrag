@@ -18,6 +18,7 @@ from app.retrieval.version_matcher import (AdvisoryRange,
 
 settings = get_settings()
 app = FastAPI(title=settings.app_name)
+MAX_QUERY_MATCHES = 1000
 
 
 class QueryRequest(BaseModel):
@@ -103,6 +104,7 @@ def query_vulnerabilities(payload: QueryRequest, db: Session = Depends(get_db)) 
             selectinload(Advisory.version_ranges),
         )
         .order_by(Advisory.id.desc())
+        .limit(MAX_QUERY_MATCHES)
     )
 
     if parsed.severity:
